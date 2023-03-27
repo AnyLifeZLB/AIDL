@@ -1,1 +1,5 @@
 /build
+/.idea
+/.cxx
+/src/androidTest
+/src/test
