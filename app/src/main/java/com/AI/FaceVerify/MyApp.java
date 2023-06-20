@@ -11,7 +11,6 @@ import java.util.List;
 /**
  * Created by chenjianwei on 2017/5/5.
  */
-
 public class MyApp extends Application {
 
 

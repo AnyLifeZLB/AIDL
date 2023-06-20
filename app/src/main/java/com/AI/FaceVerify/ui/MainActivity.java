@@ -16,38 +16,49 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.AI.FaceVerify.MessageReceiver;
 import com.AI.FaceVerify.MessageSender;
 import com.AI.FaceVerify.R;
-import com.AI.FaceVerify.data.MessageModel;
-import com.AI.FaceVerify.service.MessageService;
+import com.AI.FaceVerify.data.TestMsgModel;
+import com.AI.FaceVerify.service.SearchFaceService;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 主流程 FAISS MILVUS
+ *
+ */
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private MessageSender messageSender;
 
+    private List<String> baseFiles=new ArrayList<>();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        findViewById(R.id.test).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
+        findViewById(R.id.test).setOnClickListener((View.OnClickListener) v -> {
+            try {
 
-                    //设置Binder死亡监听
-                    messageSender.asBinder().linkToDeath(deathRecipient, 0);
-                    //把接收消息的回调接口注册到服务端
-                    messageSender.registerReceiveListener(messageReceiver);
-                    //调用远程Service的sendMessage方法，并传递消息实体对象
+                //设置Binder死亡监听
+                messageSender.asBinder().linkToDeath(deathRecipient, 0);
 
-                    messageSender.sendBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
+                //把接收消息的回调接口注册到服务端
+                messageSender.registerReceiveListener(messageReceiver);
+
+                //调用远程Service的sendMessage方法，并传递消息实体对象
+                baseFiles.add("/path/test/1234");
+                messageSender.distributeTask(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher),baseFiles);
+
+            } catch (RemoteException e) {
+                e.printStackTrace();
             }
+
         });
 
-
         setupService();
+
     }
 
     /**
@@ -76,13 +87,15 @@ public class MainActivity extends AppCompatActivity {
      * unbind后Service仍保持运行，可以同时调用bindService和startService（比如像聊天软件，退出UI进程，Service仍能接收消息）
      */
     private void setupService() {
-        Intent intent = new Intent(this, MessageService.class);
+        Intent intent = new Intent(this, SearchFaceService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
         startService(intent);
     }
 
+
     /**
      * Binder可能会意外死忙（比如Service Crash），Client监听到Binder死忙后可以进行重连服务等操作
+     *
      */
     IBinder.DeathRecipient deathRecipient = new IBinder.DeathRecipient() {
         @Override
@@ -97,18 +110,20 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+
     //消息监听回调接口
     private MessageReceiver messageReceiver = new MessageReceiver.Stub() {
-
-        @Override
-        public void onMessageReceived(MessageModel receivedMessage) throws RemoteException {
-            Log.d(TAG, "onMessageReceived: " + receivedMessage.toString());
-        }
 
         @Override
         public void onVerifyResult(String path, float score) throws RemoteException {
             Log.d(TAG, "onMessageReceived: " + path.toString());
         }
+
+        @Override
+        public void onMessageReceived(TestMsgModel receivedMessage) throws RemoteException {
+            Log.d(TAG, "onMessageReceived: " + receivedMessage.toString());
+        }
+
     };
 
     ServiceConnection serviceConnection = new ServiceConnection() {
@@ -117,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             //使用asInterface方法取得AIDL对应的操作接口
             messageSender = MessageSender.Stub.asInterface(service);
-
 
 //            //生成消息实体对象
 //            MessageModel messageModel = new MessageModel();
@@ -135,7 +149,6 @@ public class MainActivity extends AppCompatActivity {
 //            } catch (RemoteException e) {
 //                e.printStackTrace();
 //            }
-
 
         }
 

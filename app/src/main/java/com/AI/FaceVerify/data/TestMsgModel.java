@@ -4,10 +4,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Created by chenjianwei on 2017/4/3.
+ *
  */
-
-public class MessageModel implements Parcelable {
+public class TestMsgModel implements Parcelable {
 
     private String from;
     private String to;
@@ -58,24 +57,24 @@ public class MessageModel implements Parcelable {
         dest.writeString(this.content);
     }
 
-    public MessageModel() {
+    public TestMsgModel() {
     }
 
-    protected MessageModel(Parcel in) {
+    protected TestMsgModel(Parcel in) {
         this.from = in.readString();
         this.to = in.readString();
         this.content = in.readString();
     }
 
-    public static final Parcelable.Creator<MessageModel> CREATOR = new Parcelable.Creator<MessageModel>() {
+    public static final Parcelable.Creator<TestMsgModel> CREATOR = new Parcelable.Creator<TestMsgModel>() {
         @Override
-        public MessageModel createFromParcel(Parcel source) {
-            return new MessageModel(source);
+        public TestMsgModel createFromParcel(Parcel source) {
+            return new TestMsgModel(source);
         }
 
         @Override
-        public MessageModel[] newArray(int size) {
-            return new MessageModel[size];
+        public TestMsgModel[] newArray(int size) {
+            return new TestMsgModel[size];
         }
     };
 }

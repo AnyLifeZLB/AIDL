@@ -12,31 +12,35 @@ import android.util.Log;
 
 import com.AI.FaceVerify.MessageReceiver;
 import com.AI.FaceVerify.MessageSender;
-import com.AI.FaceVerify.data.MessageModel;
+import com.AI.FaceVerify.data.TestMsgModel;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MessageService extends Service {
+/**
+ * 远程服务搜索
+ *
+ */
+public class SearchFaceService extends Service {
 
     private static final String TAG = "MessageService";
     private AtomicBoolean serviceStop = new AtomicBoolean(false);
     //RemoteCallbackList专门用来管理多进程回调接口
     private RemoteCallbackList<MessageReceiver> listenerList = new RemoteCallbackList<>();
 
-    public MessageService() {
+    public SearchFaceService() {
 
     }
 
     IBinder messageSender = new MessageSender.Stub() {
 
         @Override
-        public void sendBitmap(Bitmap b) throws RemoteException{
-            Log.e(TAG, "messageModel: " +b.getRowBytes());
+        public void distributeTask(Bitmap b, List<String> list) throws RemoteException {
+            Log.e(TAG, "messageModel: " + b.getRowBytes());
 
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-
 
                     /**
                      * RemoteCallbackList的遍历方式
@@ -48,14 +52,14 @@ public class MessageService extends Service {
                         MessageReceiver messageReceiver = listenerList.getBroadcastItem(i);
                         if (messageReceiver != null) {
                             try {
-                                messageReceiver.onVerifyResult("32543254234",9f);
+                                messageReceiver.onVerifyResult("32543254234", 9f);
                             } catch (RemoteException e) {
                                 e.printStackTrace();
                             }
                         }
                     }
-                    listenerList.finishBroadcast();
 
+                    listenerList.finishBroadcast();
 
                 }
             }).start();
@@ -64,12 +68,12 @@ public class MessageService extends Service {
 
 
         @Override
-        public void sendMessage(MessageModel messageModel) {
+        public void sendMessage(TestMsgModel messageModel) {
             Log.e(TAG, "messageModel: " + messageModel.toString());
         }
 
         @Override
-        public void registerReceiveListener(MessageReceiver messageReceiver)  {
+        public void registerReceiveListener(MessageReceiver messageReceiver) {
             listenerList.register(messageReceiver);
         }
 
@@ -80,24 +84,23 @@ public class MessageService extends Service {
 
         @Override
         public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
-            /**
-             * 包名验证方式
-             */
-            String packageName = null;
-            String[] packages = getPackageManager().getPackagesForUid(getCallingUid());
-            if (packages != null && packages.length > 0) {
-                packageName = packages[0];
-            }
-            if (packageName == null || !packageName.startsWith("com.AI.FaceVerify")) {
-                Log.d("onTransact", "拒绝调用：" + packageName);
-                return false;
-            }
+
+//            /**
+//             * 包名验证方式
+//             */
+//            String packageName = null;
+//            String[] packages = getPackageManager().getPackagesForUid(getCallingUid());
+//            if (packages != null && packages.length > 0) {
+//                packageName = packages[0];
+//            }
+//            if (packageName == null || !packageName.startsWith("com.AI.FaceVerify")) {
+//                Log.d("onTransact", "拒绝调用：" + packageName);
+//                return false;
+//            }
 
             return super.onTransact(code, data, reply, flags);
         }
     };
-
-
 
 
     @Override
@@ -115,7 +118,6 @@ public class MessageService extends Service {
 //        Debug.waitForDebugger();
 
         super.onCreate();
-
 
         //不要这样一直空跑
 //        new Thread(new FakeTCPTask()).start();
@@ -140,7 +142,7 @@ public class MessageService extends Service {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                MessageModel messageModel = new MessageModel();
+                TestMsgModel messageModel = new TestMsgModel();
                 messageModel.setFrom("Service");
                 messageModel.setTo("Client");
                 messageModel.setContent(String.valueOf(System.currentTimeMillis()));
